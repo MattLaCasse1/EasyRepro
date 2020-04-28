@@ -150,11 +150,15 @@ namespace Microsoft.Dynamics365.UIAutomation.Api.UCI
                     ThinkTime(3000);
 
                     redirectAction.Invoke(new LoginRedirectEventArgs(username, password, driver));
-                    return LoginResult.Redirect;
+                    waitingForOtc = GetOtcInput(driver) != null;
+                    if (!waitingForOtc)
+                        return LoginResult.Redirect;
                 }
-
-                EnterPassword(driver, password);
-                ThinkTime(1000);
+                else
+                {
+                    EnterPassword(driver, password);
+                    ThinkTime(1000);
+                }
             }
 
             int attempts = 0;

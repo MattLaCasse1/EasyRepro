@@ -9,6 +9,7 @@ using Microsoft.Dynamics365.UIAutomation.Api.UCI;
 using Microsoft.Dynamics365.UIAutomation.Browser;
 using Microsoft.Dynamics365.UIAutomation.Browser.Logs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OpenQA.Selenium;
 
 namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
 {
@@ -21,20 +22,20 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
         protected readonly TracingService trace;
         protected XrmApp _xrmApp;
         protected WebClient _client;
-      
+
         public TestContext TestContext { get; set; } // VSTest fulfill this property before run each test, remove for NUnit
-        public  virtual string CurrentTestName => TestContext.TestName; // NUnit => replace or override this method with: TestContext.CurrentContext.Test.Name
+        public virtual string CurrentTestName => TestContext.TestName; // NUnit => replace or override this method with: TestContext.CurrentContext.Test.Name
 
         protected TestsBase()
         {
             trace = new TracingService(GetType(), Constants.DefaultTraceSource);
             trace.Log("Init Tracing Service - Success");
         }
-        
+
         public virtual void InitTest()
         {
             try
-            {  
+            {
                 trace.Log(CurrentTestName);
                 CreateApp();
                 NavigateToHomePage();
@@ -45,7 +46,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
                 throw;
             }
         }
-        
+
         public virtual void FinishTest()
         {
             CloseApp();
@@ -62,7 +63,7 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
             _xrmApp = new XrmApp(_client);
 
             _xrmApp.OnlineLogin.Login(_xrmUri, _username, _password, _mfaSecretKey);
-            
+
             trace.Log("Success");
 
             return _xrmApp;
@@ -75,11 +76,11 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
             _client = null;
             trace.Log("Success");
         }
-        
+
         public virtual void SetOptions(BrowserOptions options) { }
 
-        public virtual void NavigateToHomePage() {}
-        
+        public virtual void NavigateToHomePage() { }
+
         public virtual void NavigateTo(string appName, string area = null, string subarea = null)
         {
             trace.Log($"(App: {appName.Format()}, Area: {area.Format()}, SubArea: {subarea.Format()})");
@@ -87,12 +88,20 @@ namespace Microsoft.Dynamics365.UIAutomation.Sample.UCI
 
             var hasArea = !string.IsNullOrWhiteSpace(area);
             var hasSubArea = !string.IsNullOrWhiteSpace(subarea);
-            if(hasArea && hasSubArea)
+            if (hasArea && hasSubArea)
                 _xrmApp.Navigation.OpenSubArea(area, subarea);
-            else if(hasArea)
+            else if (hasArea)
                 _xrmApp.Navigation.OpenArea(area);
-            else if(hasSubArea)
+            else if (hasSubArea)
                 _xrmApp.Navigation.OpenSubArea(subarea);
+        }
+
+        public void ADFSLoginAction(LoginRedirectEventArgs args)
+        {
+            var d = args.Driver;
+            d.FindElement(By.Id("passwordInput")).SendKeys(args.Password.ToUnsecureString());
+            d.ClickWhenAvailable(By.Id("submitButton"), new TimeSpan(0, 0, 2));
+
         }
     }
 }
